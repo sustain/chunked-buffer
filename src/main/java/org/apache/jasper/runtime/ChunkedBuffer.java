@@ -308,7 +308,7 @@ public class ChunkedBuffer {
     }
 
     public Reader getReader() {
-        return new CharBufferReader(chunks, count);
+        return new ChunkedBufferReader(chunks, count);
     }
 
     public void writeOut(Writer writer) throws IOException, IllegalArgumentException {
@@ -325,7 +325,7 @@ public class ChunkedBuffer {
     }
 
     @SuppressWarnings("SynchronizeOnNonFinalField")
-    private static class CharBufferReader extends Reader {
+    private static class ChunkedBufferReader extends Reader {
 
         private final List<char[]> chunks;
         private final int count;
@@ -338,7 +338,7 @@ public class ChunkedBuffer {
         private int markedChunkIdx = -1;
         private int markedPos = 0;
 
-        private CharBufferReader(List<char[]> chunks, int count) {
+        private ChunkedBufferReader(List<char[]> chunks, int count) {
             this.chunks = chunks;
             this.count = count;
             currentChunkIdx = chunks.size() == 0 ? -1 : 0;
