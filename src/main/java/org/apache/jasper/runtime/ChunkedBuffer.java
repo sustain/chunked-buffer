@@ -214,7 +214,11 @@ public class ChunkedBuffer {
     }
 
     public char[] toArray() {
-        char[] result = new char[length()];
+        char[] result = new char[count];
+        if (count == 0) {
+            return result;
+        }
+        assert (currentChunk != null);
         int offset = 0;
         for (char[] chunk : this.chunks) {
             if (chunk == currentChunk) {
@@ -228,6 +232,10 @@ public class ChunkedBuffer {
     }
 
     public String toString() {
+        if (count == 0) {
+            return "";
+        }
+        assert (currentChunk != null);
         StringBuilder sb = new StringBuilder(length());
         for (char[] chunk : this.chunks) {
             if (chunk == currentChunk) {
@@ -253,6 +261,7 @@ public class ChunkedBuffer {
         currentChunkIdx = -1;
         capacity = 0;
         count = 0;
+        posInCurrentChunk = 0;
     }
 
     public void setLength(int newLength) {
@@ -315,6 +324,10 @@ public class ChunkedBuffer {
         if (writer == null) {
             throw new IllegalArgumentException("writer: may not be null.");
         }
+        if (count == 0) {
+            return;
+        }
+        assert (currentChunk != null);
         for (char[] chunk : this.chunks) {
             if (chunk == this.currentChunk) {
                 break;

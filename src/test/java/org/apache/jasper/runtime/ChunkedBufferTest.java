@@ -108,6 +108,16 @@ public class ChunkedBufferTest {
     }
 
     @Test
+    public void testToString3() {
+        ChunkedBuffer buf = new ChunkedBuffer(128);
+        assertEquals("", buf.toString());
+        buf.clear();
+        assertEquals("", buf.toString());
+        buf.append("a");
+        assertEquals("a", buf.toString());
+    }
+
+    @Test
     public void testClear() {
         StringBuilder sb = new StringBuilder(10240);
         for (int i = 0; i < 145; ++i) {
