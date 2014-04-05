@@ -4,7 +4,7 @@
     <groupId>com.sustain</groupId>
     <artifactId>chunked-buffer</artifactId>
     <packaging>jar</packaging>
-    <version>1.5</version>
+    <version>1.6</version>
     <name>chunked-buffer library</name>
     <url>http://maven.apache.org</url>
     <repositories>
