@@ -234,7 +234,7 @@ public class ChunkedByteArray {
     private void ensureCapacityInternal(int newCapacity) {
         if (newCapacity < 0)
             throw new IllegalArgumentException();
-        while (newCapacity >= this.capacity) {
+        while (newCapacity > this.capacity) {
             // allocate a new chunk
             int size = capacity == 0 ? this.initialCapacity : (int) (capacity * growthFactor) - capacity;
             if (size < MIN_CHUNK_SIZE) {
