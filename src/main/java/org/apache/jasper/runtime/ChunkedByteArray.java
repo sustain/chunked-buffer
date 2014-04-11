@@ -349,7 +349,7 @@ public class ChunkedByteArray {
                 return -1;
             }
             if (pos + len > count) {
-                len = count - posInCurrentChunk;
+                len = count - pos;
             }
             if (len <= 0) {
                 return 0;
