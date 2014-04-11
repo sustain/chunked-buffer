@@ -342,6 +342,7 @@ public class ChunkedBuffer {
 
         private final List<char[]> chunks;
         private final int count;
+        private int pos = 0;
 
         private char[] currentChunk;
         private int currentChunkIdx = -1;
@@ -350,12 +351,13 @@ public class ChunkedBuffer {
         private char[] markedChunk;
         private int markedChunkIdx = -1;
         private int markedPos = 0;
+        private int markedPosInCurrentChunk = 0;
 
         private ChunkedBufferReader(List<char[]> chunks, int count) {
             this.chunks = chunks;
             this.count = count;
-            currentChunkIdx = chunks.size() == 0 ? -1 : 0;
-            currentChunk = chunks.size() == 0 ? null : chunks.get(0);
+            markedChunkIdx = currentChunkIdx = chunks.size() == 0 ? -1 : 0;
+            markedChunk = currentChunk = chunks.size() == 0 ? null : chunks.get(0);
         }
 
         private void ensureOpen() throws IOException {
@@ -367,10 +369,11 @@ public class ChunkedBuffer {
         public int read() throws IOException {
             synchronized (lock) {
                 ensureOpen();
-                if (posInCurrentChunk >= count) {
+                if (pos >= count) {
                     return -1;
                 }
                 gotoNextReadableChunk();
+                pos++;
                 return currentChunk[posInCurrentChunk++];
             }
         }
@@ -397,11 +400,11 @@ public class ChunkedBuffer {
                     return 0;
                 }
 
-                if (posInCurrentChunk >= count) {
+                if (pos >= count) {
                     return -1;
                 }
-                if (posInCurrentChunk + len > count) {
-                    len = count - posInCurrentChunk;
+                if (pos + len > count) {
+                    len = count - pos;
                 }
                 if (len <= 0) {
                     return 0;
@@ -417,6 +420,7 @@ public class ChunkedBuffer {
                         off += charsToCopy;
                         remaining -= charsToCopy;
                         this.posInCurrentChunk += charsToCopy;
+                        this.pos += charsToCopy;
                     }
                 }
                 return len;
@@ -426,8 +430,8 @@ public class ChunkedBuffer {
         public long skip(long n) throws IOException {
             synchronized (lock) {
                 ensureOpen();
-                if (posInCurrentChunk + n > count) {
-                    n = count - posInCurrentChunk;
+                if (pos + n > count) {
+                    n = count - pos;
                 }
                 if (n < 0) {
                     return 0;
@@ -442,6 +446,7 @@ public class ChunkedBuffer {
                     if (charsToAdvance > 0) {
                         remaining -= charsToAdvance;
                         this.posInCurrentChunk += remaining;
+                        this.pos += remaining;
                     }
                 }
                 return n;
@@ -451,7 +456,7 @@ public class ChunkedBuffer {
         public boolean ready() throws IOException {
             synchronized (lock) {
                 ensureOpen();
-                return (count - posInCurrentChunk) > 0;
+                return (count - pos) > 0;
             }
         }
 
@@ -462,7 +467,8 @@ public class ChunkedBuffer {
         public void mark(int readAheadLimit) throws IOException {
             synchronized (lock) {
                 ensureOpen();
-                markedPos = posInCurrentChunk;
+                markedPos = pos;
+                markedPosInCurrentChunk = posInCurrentChunk;
                 markedChunk = currentChunk;
                 markedChunkIdx = currentChunkIdx;
             }
@@ -471,7 +477,8 @@ public class ChunkedBuffer {
         public void reset() throws IOException {
             synchronized (lock) {
                 ensureOpen();
-                posInCurrentChunk = markedPos;
+                pos = markedPos;
+                posInCurrentChunk = markedPosInCurrentChunk;
                 currentChunk = markedChunk;
                 currentChunkIdx = markedChunkIdx;
             }

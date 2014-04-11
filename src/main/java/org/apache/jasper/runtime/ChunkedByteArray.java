@@ -286,6 +286,7 @@ public class ChunkedByteArray {
     private static class ChunkedByteBufferInputStream extends InputStream {
         private final List<byte[]> chunks;
         private final int count;
+        private int pos = 0;
 
         private byte[] currentChunk;
         private int currentChunkIdx = -1;
@@ -294,12 +295,13 @@ public class ChunkedByteArray {
         private byte[] markedChunk;
         private int markedChunkIdx = -1;
         private int markedPos = 0;
+        private int markedPosInCurrentChunk = 0;
 
         private ChunkedByteBufferInputStream(List<byte[]> chunks, int count) {
             this.chunks = chunks;
             this.count = count;
-            currentChunkIdx = chunks.size() == 0 ? -1 : 0;
-            currentChunk = chunks.size() == 0 ? null : chunks.get(0);
+            markedChunkIdx = currentChunkIdx = chunks.size() == 0 ? -1 : 0;
+            markedChunk = currentChunk = chunks.size() == 0 ? null : chunks.get(0);
         }
 
         private void ensureOpen() throws IOException {
@@ -314,10 +316,11 @@ public class ChunkedByteArray {
 
         public int read() throws IOException {
             ensureOpen();
-            if (posInCurrentChunk >= count) {
+            if (pos >= count) {
                 return -1;
             }
             gotoNextReadableChunk();
+            pos++;
             return currentChunk[posInCurrentChunk++];
         }
 
@@ -342,10 +345,10 @@ public class ChunkedByteArray {
                 return 0;
             }
 
-            if (posInCurrentChunk >= count) {
+            if (pos >= count) {
                 return -1;
             }
-            if (posInCurrentChunk + len > count) {
+            if (pos + len > count) {
                 len = count - posInCurrentChunk;
             }
             if (len <= 0) {
@@ -362,6 +365,7 @@ public class ChunkedByteArray {
                     off += bytesToCopy;
                     remaining -= bytesToCopy;
                     this.posInCurrentChunk += bytesToCopy;
+                    this.pos += bytesToCopy;
                 }
             }
             return len;
@@ -369,8 +373,8 @@ public class ChunkedByteArray {
 
         public long skip(long n) throws IOException {
             ensureOpen();
-            if (posInCurrentChunk + n > count) {
-                n = count - posInCurrentChunk;
+            if (pos + n > count) {
+                n = count - pos;
             }
             if (n < 0) {
                 return 0;
@@ -385,6 +389,7 @@ public class ChunkedByteArray {
                 if (bytesToAdvance > 0) {
                     remaining -= bytesToAdvance;
                     this.posInCurrentChunk += remaining;
+                    this.pos += remaining;
                 }
             }
             return n;
@@ -392,7 +397,7 @@ public class ChunkedByteArray {
 
         public boolean ready() throws IOException {
             ensureOpen();
-            return (count - posInCurrentChunk) > 0;
+            return (count - pos) > 0;
         }
 
         public boolean markSupported() {
@@ -403,14 +408,16 @@ public class ChunkedByteArray {
             if (isClosed()) {
                 return;
             }
-            markedPos = posInCurrentChunk;
+            markedPos = pos;
+            markedPosInCurrentChunk = posInCurrentChunk;
             markedChunk = currentChunk;
             markedChunkIdx = currentChunkIdx;
         }
 
         public void reset() throws IOException {
             ensureOpen();
-            posInCurrentChunk = markedPos;
+            pos = markedPos;
+            posInCurrentChunk = markedPosInCurrentChunk;
             currentChunk = markedChunk;
             currentChunkIdx = markedChunkIdx;
         }

@@ -1,8 +1,10 @@
 package org.apache.jasper.runtime;
 
+import junit.framework.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.io.Reader;
 import java.io.StringWriter;
 import java.util.Arrays;
 
@@ -225,4 +227,36 @@ public class ChunkedBufferTest {
             fail("Wrong exception thrown.");
         }
     }
+
+    @Test
+    public void testReader() throws IOException {
+        ChunkedBuffer cb = new ChunkedBuffer(2, 4);
+        String txt = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        cb.append(txt);
+        Reader reader = cb.getReader();
+        StringBuilder sb = new StringBuilder();
+        int c;
+        while ((c = reader.read()) != -1) {
+            sb.append((char)c);
+        }
+        Assert.assertEquals(txt, sb.toString());
+    }
+
+
+    @Test
+    public void testReader1() throws IOException {
+        ChunkedBuffer cb = new ChunkedBuffer(2, 4);
+        String txt = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        cb.append(txt);
+        Reader reader = cb.getReader();
+        char[] buf = new char[5];
+        StringBuilder sb = new StringBuilder();
+        int len;
+        while ((len = reader.read(buf, 0, 5)) != -1) {
+            sb.append(buf, 0, len);
+        }
+        Assert.assertEquals(txt, sb.toString());
+    }
+
+
 }
