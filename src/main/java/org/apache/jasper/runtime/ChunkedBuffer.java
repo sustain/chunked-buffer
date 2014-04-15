@@ -12,7 +12,7 @@ import java.util.List;
  * Date: 3/17/14
  * Time: 3:49 PM
  */
-public class ChunkedBuffer {
+public class ChunkedBuffer extends Writer {
     public static final int DEFAULT_INITIAL_CAPACITY = 512;
     public static final double DEFAULT_GROWTH_FACTOR = 1.5;
     public static final int MIN_CHUNK_SIZE = 16;
@@ -38,6 +38,11 @@ public class ChunkedBuffer {
 
     public ChunkedBuffer() {
         this(DEFAULT_INITIAL_CAPACITY);
+    }
+
+    @Override
+    public void write(char[] cbuf, int off, int len) throws IOException {
+        append(cbuf, off, len);
     }
 
     public ChunkedBuffer(int initialCapacity) {
@@ -72,11 +77,20 @@ public class ChunkedBuffer {
         this.capacity = initialCapacity;
     }
 
-    public void append(char character) {
+    public ChunkedBuffer append(char character) {
         ensureCapacityInternal(count + 1);
         ensureCurrentChunkHasCapacity();
         currentChunk[posInCurrentChunk++] = character;
         this.count++;
+        return this;
+    }
+
+    @Override
+    public void flush() throws IOException {
+    }
+
+    @Override
+    public void close() throws IOException {
     }
 
     public void append(String text) {

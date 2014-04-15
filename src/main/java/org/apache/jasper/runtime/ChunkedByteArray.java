@@ -12,7 +12,7 @@ import java.util.List;
  * Date: 3/17/14
  * Time: 3:49 PM
  */
-public class ChunkedByteArray {
+public class ChunkedByteArray extends OutputStream {
     public static final int DEFAULT_INITIAL_CAPACITY = 512;
     public static final double DEFAULT_GROWTH_FACTOR = 1.5;
     public static final int MIN_CHUNK_SIZE = 16;
@@ -38,6 +38,11 @@ public class ChunkedByteArray {
 
     public ChunkedByteArray() {
         this(DEFAULT_INITIAL_CAPACITY);
+    }
+
+    @Override
+    public void write(int b) throws IOException {
+        append((byte) b);
     }
 
     public ChunkedByteArray(int initialCapacity) {
